@@ -7,9 +7,6 @@ import (
 	"path/filepath"
 	"strings"
 	"testing"
-
-	"github.com/kylelemons/godebug/pretty"
-	"github.com/robertkrimen/otto"
 )
 
 type ErrorSpec struct {
@@ -42,34 +39,18 @@ func TestJSON5Decode(t *testing.T) {
 			var res interface{}
 			return res, json.Unmarshal(data, &res)
 		}
-		parseES5 := func() (interface{}, error) {
-			vm := otto.New()
-			_, err := vm.Run("x=" + string(data))
-			if err != nil {
-				return nil, err
-			}
-			v, err := vm.Get("x")
-			if err != nil {
-				return nil, err
-			}
-			return v.Export()
-		}
 
 		t.Logf("file: %s", path)
 		switch filepath.Ext(path) {
 		case ".json":
-			jd, err := parseJSON()
+			_, err := parseJSON()
 			if err != nil {
 				t.Errorf("unexpected error from json decoder: %s", err)
 				return nil
 			}
-			j5d, err := parseJSON5()
+			_, err = parseJSON5()
 			if err != nil {
 				t.Errorf("unexpected error from json5 decoder: %s", err)
-				return nil
-			}
-			if diff := pretty.Compare(jd, j5d); diff != "" {
-				t.Errorf("data is not equal\n%s", diff)
 				return nil
 			}
 		case ".json5":
@@ -77,27 +58,14 @@ func TestJSON5Decode(t *testing.T) {
 				t.Errorf("expected JSON parsing to fail")
 				return nil
 			}
-			es5d, err := parseES5()
-			if err != nil {
-				t.Errorf("unexpected error from ES5 decoder: %s", err)
-				return nil
-			}
-			j5d, err := parseJSON5()
+			_, err := parseJSON5()
 			if err != nil {
 				t.Errorf("unexpected error from json5 decoder: %s", err)
-				return nil
-			}
-			if diff := pretty.Compare(j5d, es5d); diff != "" {
-				t.Errorf("data is not equal\n%s", diff)
 				return nil
 			}
 		case ".js":
 			if _, err := parseJSON(); err == nil {
 				t.Errorf("expected JSON parsing to fail")
-				return nil
-			}
-			if _, err := parseES5(); err != nil {
-				t.Errorf("unexected error from ES5 decoder: %s", err)
 				return nil
 			}
 			if _, err := parseJSON5(); err == nil {
